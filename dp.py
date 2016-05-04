@@ -17,14 +17,31 @@ def crp(a, N):
     p_old = table_size / float(n + a)
 
 
-#TODO: Write a DP (Stick Breaking Process)
+def sbp(alpha, n=30):
+    """
+    Generative process that simulates the stick breaking process.
 
-def sbp(alpha, H, n=200):
-    for i in range(100):
-        print(np.random.beta(2, 3))
-    pass
+    alpha:  concentration/disperson parameter; roughly correlates to how spread
+            out we want our diversity of stick lengths to be.  
 
-#TODO: Write a DP (Polya Urn)
+        n:  number of iterations to continue the stick breaking 
+
+    """
+
+    out = [] 
+    draws = iter(np.random.beta(1, alpha, n))
+    pi_k = 1
+    stk = 1
+
+    for i in range(n):
+        b_k = next(draws)
+        pi_k = b_k * stk
+        out.append(pi_k) 
+        stk = stk * (1 - b_k)
+
+    return out
+
+
 def pu(alpha, H, n=100):
     """
     Generative process that simulates a Polya Urn scheme. We index the colors
@@ -61,6 +78,9 @@ def pu(alpha, H, n=100):
 def sample(H):
     return int(max(round(next(H)), 0))
 
-out = pu(10.0, np.random.normal(10, 5, 100), 100)
-plt.hist(out)
+pu_out = pu(10.0, np.random.normal(10, 5, 1000), 1000)
+# plt.hist(pu_out)
+
+sbp_out = sbp(1, 10)
+plt.bar([i for i in range(10)], sbp_out)
 plt.show()
