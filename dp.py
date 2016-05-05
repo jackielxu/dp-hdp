@@ -6,16 +6,19 @@ import random
 
 # TODO: Write a DP (Chinese Restaurant Process)
 
-# Test the DP
-a = [1,1]
-G = np.random.dirichlet(a)
-#plt.plot(G)
-
-def crp(a, N):
-  for n in N:
-    p_new = a / float(n + a)
-    p_old = table_size / float(n + a)
-
+def crp(a, n=200):
+  out = [1]
+  count = 1
+  for i in range(1,n+1):
+    p_new = a / float(i + a)
+    rand = random.random()
+    if rand <= p_new:
+      count += 1
+      out.append(count)
+    else:
+      choice = random.choice(out)
+      out.append(choice)
+  return out
 
 #TODO: Write a DP (Stick Breaking Process)
 
@@ -59,8 +62,9 @@ def pu(alpha, H, n=100):
     return out
 
 def sample(H):
-    return int(max(round(next(H)), 0))
+    return int(max(round(next(H)), 0)) #TODO: Should this be max of the number and 0?
 
-out = pu(10.0, np.random.normal(10, 5, 100), 100)
+#out = pu(10.0, np.random.normal(10, 5, 100), 100)
+out = crp(10)
 plt.hist(out)
 plt.show()
