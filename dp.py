@@ -24,6 +24,24 @@ def sample_invwishart(lmbda,dof):
   return np.dot(T,T.T) 
 
 # TODO: DPMM Generative model. 
+def dpmm(G_0, F, alpha, n):
+  clusters = {}
+  
+  z = crp(alpha, n) # Generate cluster assignments for each point
+  
+  # Match cluster assignments to params
+  for z_i in z:
+    theta_i = G_0[z_i]
+    
+    # Generate data points
+    if z_i in clusters:
+      clusters[z_i].append(F(theta_i))
+    else:
+      clusters[z_i] = [F(theta_i)]
+
+  return clusters
+
+
 
 def crp(alpha, n=200):
   """
@@ -31,7 +49,7 @@ def crp(alpha, n=200):
   
   Input
   alpha : concentration parameter
-  n : number of data points
+      n : number of data points
 
   Output
   out : output distribution
@@ -115,13 +133,33 @@ def pu(alpha, H, n=100):
 def sample(H):
   return int(max(round(next(H)), 0)) #TODO: Should this be max of the number and 0?
 
+
+## Testing the DPMM
+alpha = 1
+n = 50
+G_0 = np.random.uniform(0, 10, n)
+F = lambda u : np.random.normal(u)
+clusters = dpmm(G_0, F, alpha, n)
+print(len(clusters.keys()))
+
+points = [val for l in clusters.values() for val in l]
+
+colors = [[k]*(len(clusters[k])) for i,k in enumerate(clusters.keys())]
+colors = [val for l in colors for val in l]
+plt.scatter(points, [0]*(len(points)),c=colors)
+plt.show()
+
+
+## Testing the CRP
 crp_out = crp(1)
 # print(crp_out)
 # plt.hist(crp_out)
 
+## Testing the Polya-Urn
 pu_out = pu(10.0, np.random.normal(10, 5, 1000), 1000)
 # plt.hist(pu_out)
 
-sbp_out = sbp(1, 10)
-plt.bar([i for i in range(10)], sbp_out)
-plt.show()
+## Testing the Stick-Breaking Process
+#sbp_out = sbp(1, 10)
+#plt.bar([i for i in range(10)], sbp_out)
+#plt.show()
