@@ -3,15 +3,34 @@ import matplotlib.pyplot as plt
 import matplotlib.mlab as mlab
 import matplotlib.animation as animation
 import random
+import scipy.stats as stats
+import scipy.linalg
 
-# TODO: Write a DP (Chinese Restaurant Process)
+def sample_niw(mu_0, lambda_0, kappa_0, nu_0):
+  lmbda = sample_invishart(lmbda_0,nu_0) # lmbda = np.linalg.inv(sample_ishart(np.linalg.inv(lmbda_0),nu_0))
+  mu = np.random.multivariate_normal(mu_0,lmbda / kappa_0)
+  return mu, lmbda 
+
+def sample_invwishart(lmbda,dof):
+  n = lmbda.shape[0]
+  chol = np.linalg.cholesky(lmbda) 
+  if (dof <= 81+n) and (dof == np.round(dof)):
+    x = np.random.randn(dof,n)
+  else:
+    x = np.diag(np.sqrt(stats.chi2.rvs(dof-(np.arange(n)))))
+    x[np.triu_indices_from(x,1)] = np.random.randn(n*(n-1)/2) 
+  R = np.linalg.qr(x,'r')
+  T = scipy.linalg.solve_triangular(R.T,chol.T).T
+  return np.dot(T,T.T) 
+
+# TODO: DPMM Generative model. 
 
 def crp(alpha, n=200):
   """
   Generates data via Chinese Restaurant Process. 
   
   Input
-  a : concentration parameter
+  alpha : concentration parameter
   n : number of data points
 
   Output
@@ -20,7 +39,7 @@ def crp(alpha, n=200):
   out = [1]
   count = 1
   for i in range(1,n+1):
-    p_new = a / float(i + a)
+    p_new = alpha / float(i + alpha)
     rand = random.random()
     if rand <= p_new:
       count += 1
@@ -96,8 +115,9 @@ def pu(alpha, H, n=100):
 def sample(H):
   return int(max(round(next(H)), 0)) #TODO: Should this be max of the number and 0?
 
-crp_out = crp(10)
-#plt.hist(out)
+crp_out = crp(1)
+# print(crp_out)
+# plt.hist(crp_out)
 
 pu_out = pu(10.0, np.random.normal(10, 5, 1000), 1000)
 # plt.hist(pu_out)
