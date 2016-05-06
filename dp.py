@@ -23,9 +23,20 @@ def sample_invwishart(lmbda,dof):
   T = scipy.linalg.solve_triangular(R.T,chol.T).T
   return np.dot(T,T.T) 
 
-# TODO: DPMM Generative model. 
 def dpmm(G_0, F, alpha, n):
-  clusters = {}
+  """
+  Generates data via a DPMM. Currently, plots 1D data. 
+
+  Input
+    G_0 : base distribution
+      F : generative distribution
+  alpha : concentration parameter
+      n : number of data points to generate
+
+  Output:
+  clusters : mapping from cluster numbers to the points in the cluster
+  """
+  clusters = {} # Maps cluster numbers to the points in the cluster
   
   z = crp(alpha, n) # Generate cluster assignments for each point
   
@@ -135,17 +146,19 @@ def sample(H):
 
 
 ## Testing the DPMM
-alpha = 1
-n = 50
+alpha = 2
+n = 100
 G_0 = np.random.uniform(0, 10, n)
-F = lambda u : np.random.normal(u)
+F = lambda u : np.random.normal(u) # Assume unit variance
 clusters = dpmm(G_0, F, alpha, n)
 print(len(clusters.keys()))
 
-points = [val for l in clusters.values() for val in l]
-
-colors = [[k]*(len(clusters[k])) for i,k in enumerate(clusters.keys())]
-colors = [val for l in colors for val in l]
+points = []
+colors = []
+for i in clusters:
+  for val in clusters[i]:
+    points.append(val)
+    colors.append(i)
 plt.scatter(points, [0]*(len(points)),c=colors)
 plt.show()
 
