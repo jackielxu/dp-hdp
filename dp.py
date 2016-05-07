@@ -46,9 +46,13 @@ def dpmm(G_0, F, alpha, n):
     
     # Generate data points
     if z_i in clusters:
-      clusters[z_i].append(F(theta_i))
+      point = F(theta_i)
+
+      X = F(theta_i) # Can be multivariate
+      clusters[z_i].append(X)
     else:
-      clusters[z_i] = [F(theta_i)]
+      X = F(theta_i)
+      clusters[z_i] = [X]
 
   return clusters
 
@@ -142,24 +146,35 @@ def pu(alpha, H, n=100):
   return out
 
 def sample(H):
-  return int(max(round(next(H)), 0)) #TODO: Should this be max of the number and 0?
+  return int(round(next(H))) 
 
 
 ## Testing the DPMM
-alpha = 2
-n = 100
-G_0 = np.random.uniform(0, 10, n)
-F = lambda u : np.random.normal(u) # Assume unit variance
-clusters = dpmm(G_0, F, alpha, n)
-print(len(clusters.keys()))
+alpha = 10
+n = 1000
+G_01 = np.random.uniform(0, 10, n)
+G_02 = np.random.uniform(0, 10, n)
+G_0 = zip(G_01, G_02) 
 
+#F = lambda u : np.random.normal(u, 0.5) # 1D data
+F = lambda u: np.random.multivariate_normal(u, np.array([[1,0],[0,1]])*0.25) # 2D data
+clusters = dpmm(G_0, F, alpha, n)
+
+# Associate points with colors
 points = []
 colors = []
 for i in clusters:
   for val in clusters[i]:
     points.append(val)
     colors.append(i)
-plt.scatter(points, [0]*(len(points)),c=colors)
+
+x = []
+y = []
+for i in points:
+  x.append(i[0])
+  y.append(i[1])
+
+plt.scatter(x,y, c=colors)
 plt.show()
 
 
