@@ -5,11 +5,44 @@ import matplotlib.animation as animation
 import random
 import scipy.stats as stats
 import scipy.linalg
+from sklearn.datasets import load_digits
+from sklearn.preprocessing import scale
+import ast
+
+def load_data(filename):
+  """
+  Loads data and the correct clusters from a file.
+  
+  Input:
+  filename - string with the filename
+
+  Output:
+  data - the data points as a list of points ([x,y])
+  clusters - the number cluster that each point is in; same order as the list of points
+  """
+  with open(filename, "r") as f:
+    data = ast.literal_eval(f.readline()) 
+    clusters = ast.literal_eval(f.readline())
+
+  return data, clusters
+
+def load_mnist():
+  """
+  Loads MNIST data as vectors. 
+  
+  Output:
+  data - MNIST data
+  """
+  digits = load_digits()
+  data = scale(digits.data)
+  labels = digits.target
+  return data
 
 def sample_niw(mu_0, lambda_0, kappa_0, nu_0):
   lmbda = sample_invishart(lmbda_0,nu_0) # lmbda = np.linalg.inv(sample_ishart(np.linalg.inv(lmbda_0),nu_0))
   mu = np.random.multivariate_normal(mu_0,lmbda / kappa_0)
   return mu, lmbda 
+
 
 def sample_invwishart(lmbda,dof):
   n = lmbda.shape[0]
@@ -22,6 +55,7 @@ def sample_invwishart(lmbda,dof):
   R = np.linalg.qr(x,'r')
   T = scipy.linalg.solve_triangular(R.T,chol.T).T
   return np.dot(T,T.T) 
+
 
 def dpmm(G_0, F, alpha, n):
   """
@@ -46,12 +80,13 @@ def dpmm(G_0, F, alpha, n):
     
     # Generate data points
     if z_i in clusters:
-      point = F(theta_i)
 
-      X = F(theta_i) # Can be multivariate
+      X = F(theta_i)
+      #X = list(F(theta_i)) # Can be multivariate
       clusters[z_i].append(X)
     else:
       X = F(theta_i)
+      #X = list(F(theta_i))
       clusters[z_i] = [X]
 
   return clusters
@@ -150,13 +185,37 @@ def sample(H):
 
 
 ## Testing the DPMM
+# Generating 1D data
 alpha = 10
-n = 1000
+n = 500
+G_0 = np.random.uniform(0, 10, n)
+
+F = lambda u : np.random.normal(u, 0.5) # 1D data
+clusters = dpmm(G_0, F, alpha, n)
+
+# Associate points with colors
+points = []
+colors = []
+for i in clusters:
+  for val in clusters[i]:
+    points.append(val)
+    colors.append(i)
+
+with open("1d-data.txt", "w") as f:
+  f.write(str(points)) 
+  f.write(str(colors))
+
+
+plt.scatter(points, [0]*len(points), c=colors)
+plt.show()
+
+# Generating 2D data
+alpha = 10
+n = 500
 G_01 = np.random.uniform(0, 10, n)
 G_02 = np.random.uniform(0, 10, n)
 G_0 = zip(G_01, G_02) 
 
-#F = lambda u : np.random.normal(u, 0.5) # 1D data
 F = lambda u: np.random.multivariate_normal(u, np.array([[1,0],[0,1]])*0.25) # 2D data
 clusters = dpmm(G_0, F, alpha, n)
 
@@ -167,6 +226,10 @@ for i in clusters:
   for val in clusters[i]:
     points.append(val)
     colors.append(i)
+
+with open("2d-data.txt", "w") as f:
+  f.write(str(points)) 
+  f.write(str(colors))
 
 x = []
 y = []
