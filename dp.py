@@ -7,6 +7,7 @@ import scipy.stats as stats
 import scipy.linalg
 from sklearn.datasets import load_digits
 from sklearn.preprocessing import scale
+from sklearn.decomposition import PCA
 import ast
 
 def load_data(filename):
@@ -14,29 +15,34 @@ def load_data(filename):
   Loads data and the correct clusters from a file.
   
   Input:
-  filename - string with the filename
+  filename : string with the filename
 
   Output:
-  data - the data points as a list of points ([x,y])
-  clusters - the number cluster that each point is in; same order as the list of points
+  data : the data points as a list of points ([x,y])
+  clusters : the number cluster that each point is in; same order as the list of points
   """
   with open(filename, "r") as f:
     data = ast.literal_eval(f.readline()) 
     clusters = ast.literal_eval(f.readline())
-
   return data, clusters
 
-def load_mnist():
+
+def load_mnist(n_components):
   """
   Loads MNIST data as vectors. 
   
+  Input:
+  n_components : the number of components to reduce to for PCA
+
   Output:
-  data - MNIST data
+  data : MNIST data
   """
+  pca = PCA(n_components=n_components)
   digits = load_digits()
   data = scale(digits.data)
+  data_reduced = pca.fit_transform(data)
   labels = digits.target
-  return data
+  return data_reduced, labels
 
 def sample_niw(mu_0, lambda_0, kappa_0, nu_0):
   lmbda = sample_invishart(lmbda_0,nu_0) # lmbda = np.linalg.inv(sample_ishart(np.linalg.inv(lmbda_0),nu_0))
@@ -80,7 +86,6 @@ def dpmm(G_0, F, alpha, n):
     
     # Generate data points
     if z_i in clusters:
-
       X = F(theta_i)
       #X = list(F(theta_i)) # Can be multivariate
       clusters[z_i].append(X)
@@ -205,9 +210,8 @@ with open("1d-data.txt", "w") as f:
   f.write(str(points)) 
   f.write(str(colors))
 
-
-plt.scatter(points, [0]*len(points), c=colors)
-plt.show()
+#plt.scatter(points, [0]*len(points), c=colors)
+#plt.show()
 
 # Generating 2D data
 alpha = 10
@@ -237,8 +241,8 @@ for i in points:
   x.append(i[0])
   y.append(i[1])
 
-plt.scatter(x,y, c=colors)
-plt.show()
+#plt.scatter(x,y, c=colors)
+#plt.show()
 
 
 ## Testing the CRP
@@ -254,3 +258,4 @@ pu_out = pu(10.0, np.random.normal(10, 5, 1000), 1000)
 #sbp_out = sbp(1, 10)
 #plt.bar([i for i in range(10)], sbp_out)
 #plt.show()
+
