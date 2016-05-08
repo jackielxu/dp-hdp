@@ -23,6 +23,38 @@ def sample_invwishart(lmbda,dof):
   T = scipy.linalg.solve_triangular(R.T,chol.T).T
   return np.dot(T,T.T) 
 
+def update_map(mu_0, lambda_0, kappa_0, nu_0, n, x_bar, Psi_0, Sigma_0, x_mean, x_i):
+    mu_n = ((kappa_0 * mu_0) + n * x_bar)/(kappa_0 + n)
+    kappa_n = kappa_0 + n
+    nu_n = nu_0 + n
+    C = sum([np.dot((x_i[i] - x_mean), (x_i[i] - x_mean)) for i in range(len(x_i))])
+    Psi_n = Psi_0 + C + (kappa_0 * n)/(kappa_0 + n)*np.dot((x_bar - mu_0), (x_bar - mu_0))
+    Sigma_n = (kappa_n + 1)/(kappa_n*(nu_n - len(x_mean) + 1))*Psi_n 
+    return mu_n, kappa_n, nu_n, Psi_n, Sigma_n
+
+def gibbs(x, g_guess, a_0, t, F):
+  """
+  x_i are randomly assigned cluster assignments z_i.
+  
+  At each iteration, these cluster assignments are updated? How exactly is this done?  
+  We look at an x_i, we sample it from some posterior distribution, but where do we get this from?  
+  """
+  
+  z = numpy.randn(1, c_guess, len(x)) # Random cluster assignments
+  
+  for iter_i in range(t):
+    u = pu(1, np.random.normal(0, 1, len(x)), len(x))
+    for i, x_i in enumerate(x):
+      rand = random.random()
+      if rand < (a_0 / (a_0 + i)):
+        q_0 = 1.0/(2 * np.sqrt(np.pi)) * np.exp(-(np.square(x_i))/4)
+        H = np.random.normal(np.array(x_i)/2, 1/2)
+        z[i] = q_0 * H
+      else:
+        z[i] = F(u) # F = lambda u : int(round(np.random.normal(u, 1)*6)) # 1D data
+
+  return z
+ 
 def dpmm(G_0, F, alpha, n):
   """
   Generates data via a DPMM. Currently, plots 1D data. 
@@ -55,7 +87,6 @@ def dpmm(G_0, F, alpha, n):
       clusters[z_i] = [X]
 
   return clusters
-
 
 
 def crp(alpha, n=200):
@@ -146,7 +177,7 @@ def pu(alpha, H, n=100):
   return out
 
 def sample(H):
-  return int(round(next(H))) 
+  return int(round(next(H)*5)) 
 
 
 ## Testing the DPMM
