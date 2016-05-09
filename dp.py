@@ -71,26 +71,26 @@ def update_map(mu_0, lambda_0, kappa_0, nu_0, n, x_bar, Psi_0, Sigma_0, x_mean, 
     Sigma_n = (kappa_n + 1)/(kappa_n*(nu_n - len(x_mean) + 1))*Psi_n 
     return mu_n, kappa_n, nu_n, Psi_n, Sigma_n
 
-def gibbs(x, g_guess, a_0, t, F):
+def gibbs(x, c_guess, a_0, t, F):
   """
   x_i are randomly assigned cluster assignments z_i.
   
   At each iteration, these cluster assignments are updated? How exactly is this done?  
   We look at an x_i, we sample it from some posterior distribution, but where do we get this from?  
   """
-  
-  z = numpy.randn(1, c_guess, len(x)) # Random cluster assignments
+  z = np.random.randint(1, c_guess, len(x)) # Random cluster assignments
   
   for iter_i in range(t):
     u = pu(1, np.random.normal(0, 1, len(x)), len(x))
     for i, x_i in enumerate(x):
       rand = random.random()
-      if rand < (a_0 / (a_0 + i)):
-        q_0 = 1.0/(2 * np.sqrt(np.pi)) * np.exp(-(np.square(x_i))/4)
-        H = np.random.normal(np.array(x_i)/2, 1/2)
-        z[i] = q_0 * H
+      if rand < (a_0 / float(a_0 + i)):
+        q_0 = 1.0/(2.0 * np.sqrt(np.pi)) * np.exp(-(np.square(x_i))/4.0)
+        H = np.random.normal(np.array(x_i)/2.0, 0.5)
+        z[i] = q_0 * H # TODO: q_0 is very small, making z[i] = 0 most of the time
       else:
-        z[i] = F(u) # F = lambda u : int(round(np.random.normal(u, 1)*6)) # 1D data
+        # F = lambda u : map(int, map(round, np.random.normal(u, 1)*6)) # 1D data
+        z[i] = random.choice(F(u)) #TODO: F should be distributed over possible cluster assignments for x_i, so nonnegative numbers only; maybe a random choice from z?
 
   return z
  
@@ -217,6 +217,20 @@ def pu(alpha, H, n=100):
 
 def sample(H):
   return int(round(next(H)*5)) 
+
+
+## Testing the Gibbs Sample
+with open("1d-data.txt", "r") as f:
+  l = ast.literal_eval(f.readline())
+  true_clusters = ast.literal_eval(f.readline())
+x = l
+c_guess = 50
+a_0 = 10
+t = 10
+F = lambda u : map(int,map(round,np.random.normal(u, 1)*6)) 
+z = gibbs(x, c_guess, a_0, t, F)
+print z
+print true_clusters
 
 
 ## Testing the DPMM
