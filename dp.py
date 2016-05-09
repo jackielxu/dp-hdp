@@ -224,21 +224,23 @@ with open("1d-data.txt", "r") as f:
   l = ast.literal_eval(f.readline())
   true_clusters = ast.literal_eval(f.readline())
 x = l
-c_guess = 50
+c_guess = 20
 a_0 = 10
 t = 10
 F = lambda u : map(int,map(round,np.random.normal(u, 1)*6)) 
 z = gibbs(x, c_guess, a_0, t, F)
+z_min = min(z)
+z = [i + abs(z_min) for i in z] # TODO: This is a temporary fix; the values for the cluster assignments are too high to plot (matplotlib doesn't provide that many colors)
 print z
 print true_clusters
-
+plt.scatter(x, [0]*len(x), c=z)
+#plt.show()
 
 ## Testing the DPMM
 # Generating 1D data
+"""
 alpha = 10
-n = 500
-G_0 = np.random.uniform(0, 10, n)
-
+n = 100
 F = lambda u : np.random.normal(u, 0.5) # 1D data
 clusters = dpmm(G_0, F, alpha, n)
 
@@ -252,12 +254,14 @@ for i in clusters:
 
 with open("1d-data.txt", "w") as f:
   f.write(str(points)) 
+  f.write("\n")
   f.write(str(colors))
 
-#plt.scatter(points, [0]*len(points), c=colors)
-#plt.show()
-
+plt.scatter(points, [0]*len(points), c=colors)
+plt.show()
+"""
 # Generating 2D data
+"""
 alpha = 10
 n = 500
 G_01 = np.random.uniform(0, 10, n)
@@ -277,6 +281,7 @@ for i in clusters:
 
 with open("2d-data.txt", "w") as f:
   f.write(str(points)) 
+  f.write("\n")
   f.write(str(colors))
 
 x = []
@@ -285,9 +290,9 @@ for i in points:
   x.append(i[0])
   y.append(i[1])
 
-#plt.scatter(x,y, c=colors)
-#plt.show()
-
+plt.scatter(x,y, c=colors)
+plt.show()
+"""
 
 ## Testing the CRP
 crp_out = crp(1)
