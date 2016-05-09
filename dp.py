@@ -65,7 +65,7 @@ def sample_invwishart(lmbda,dof):
 
 def dpmm(G_0, F, alpha, n):
   """
-  Generates data via a DPMM. Currently, plots 1D data. 
+  Generates data via a DPMM. Currently, plots 1D or 2D data. 
 
   Input
     G_0 : base distribution
