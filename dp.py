@@ -43,7 +43,13 @@ def load_mnist(n_components):
   data = scale(digits.data)
   data_reduced = pca.fit_transform(data)
   labels = digits.target
-  return data_reduced, labels
+  data_reduced_list = [list(i) for i in list(data_reduced)]
+  labels_list = list(labels)
+  with open("mnist-{}.txt".format(n_components), "w") as f:
+    f.write(str(data_reduced_list))
+    f.write("\n")
+    f.write(str(labels_list))
+  return data_reduced_list, labels_list
 
 def sample_niw(mu_0, lambda_0, kappa_0, nu_0):
   lmbda = sample_invishart(lmbda_0,nu_0) # lmbda = np.linalg.inv(sample_ishart(np.linalg.inv(lmbda_0),nu_0))
@@ -102,7 +108,7 @@ def gibbs(x, c_guess, a_0, t, F):
 
   return old_z
  
-def dpmm(G_0, F, alpha, n):
+def dpmm(G_0, F, alpha, n, dim=1):
   """
   Generates data via a DPMM. Currently, plots 1D or 2D data. 
 
@@ -122,15 +128,16 @@ def dpmm(G_0, F, alpha, n):
   # Match cluster assignments to params
   for z_i in z:
     theta_i = G_0[z_i]
-    
+
+    if dim == 1:
+      X = F(theta_i)
+    else:
+      X = list(F(theta_i)) # Can be multivariate
+
     # Generate data points
     if z_i in clusters:
-      X = F(theta_i)
-      #X = list(F(theta_i)) # Can be multivariate
       clusters[z_i].append(X)
     else:
-      X = F(theta_i)
-      #X = list(F(theta_i))
       clusters[z_i] = [X]
 
   return clusters
@@ -187,7 +194,7 @@ def sbp(alpha, n=200):
   return out
 
 
-def pu(alpha, H, n=100):
+def pu(alpha, H, n=200):
   """
   Generative process that simulates a Polya Urn scheme. We index the colors
   in both the H and G urns by integers. 
@@ -208,7 +215,6 @@ def pu(alpha, H, n=100):
   Output
   out : output distribution
   """
-  
   H_draws = iter(H)
   out = [sample(H_draws)]
   alpha = float(alpha)
@@ -226,8 +232,19 @@ def pu(alpha, H, n=100):
 def sample(H):
   return int(round(next(H)*5)) 
 
+## MNIST data
+'''
+load_mnist(2)
+load_mnist(5)
+load_mnist(10)
+load_mnist(20)
+load_mnist(30)
+load_mnist(50)
+load_mnist(64)
+'''
 
 ## Testing the Gibbs Sample
+"""
 with open("1d-data.txt", "r") as f:
   l = ast.literal_eval(f.readline())
   true_clusters = ast.literal_eval(f.readline())
@@ -237,17 +254,18 @@ a_0 = 2
 t = 100
 # F = lambda u : map(int,map(round,np.random.normal(u, 0.25))) 
 F = lambda u : int(round(np.random.normal(u, 1)))
-z = gibbs(x, c_guess, a_0, t, F)
-z_min = min(z)
-z = [i + abs(z_min) + 1 for i in z] # TODO: This is a temporary fix; the values for the cluster assignments are too high to plot (matplotlib doesn't provide that many colors)
-print z
-print true_clusters
-plt.scatter(x, [0]*len(x), c=z)
-plt.show()
-
+for i in range(10):
+  z = gibbs(x, c_guess, a_0, t, F)
+  z_min = min(z)
+  z = [i + abs(z_min) + 1 for i in z] # TODO: This is a temporary fix; the values for the cluster assignments are too high to plot (matplotlib doesn't provide that many colors)
+  print z
+  print true_clusters
+  plt.scatter(x, [0]*len(x), c=z)
+  plt.show()
+"""
 ## Testing the DPMM
 # Generating 1D data
-'''
+"""
 alpha = 2
 n = 100
 G_0 = np.random.uniform(0, 10, n)
@@ -269,17 +287,17 @@ with open("1d-data.txt", "w") as f:
 
 plt.scatter(points, [0]*len(points), c=colors)
 plt.show()
-'''
+"""
 # Generating 2D data
 """
-alpha = 10
+alpha = 2
 n = 500
 G_01 = np.random.uniform(0, 10, n)
 G_02 = np.random.uniform(0, 10, n)
 G_0 = zip(G_01, G_02) 
 
 F = lambda u: np.random.multivariate_normal(u, np.array([[1,0],[0,1]])*0.25) # 2D data
-clusters = dpmm(G_0, F, alpha, n)
+clusters = dpmm(G_0, F, alpha, n, dim=2)
 
 # Associate points with colors
 points = []
@@ -304,17 +322,20 @@ plt.scatter(x,y, c=colors)
 plt.show()
 """
 
+"""
 ## Testing the CRP
 crp_out = crp(1)
-# print(crp_out)
-# plt.hist(crp_out)
+print(crp_out)
+plt.hist(crp_out)
+plt.show()
 
 ## Testing the Polya-Urn
-pu_out = pu(10.0, np.random.normal(10, 5, 1000), 1000)
-# plt.hist(pu_out)
+pu_out = pu(1, np.random.normal(10, 5, 1000))
+plt.hist(pu_out)
+plt.show()
 
 ## Testing the Stick-Breaking Process
-#sbp_out = sbp(1, 10)
-#plt.bar([i for i in range(10)], sbp_out)
-#plt.show()
-
+sbp_out = sbp(1, 10)
+plt.bar([i for i in range(10)], sbp_out)
+plt.show()
+"""
