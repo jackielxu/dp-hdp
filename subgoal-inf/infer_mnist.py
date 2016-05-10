@@ -8,6 +8,7 @@ import matplotlib
 import pylab
 import os
 import sys
+import ast
 matplotlib.rcParams['font.size'] = 8
 
 import pyhsmm
@@ -28,17 +29,11 @@ fit the model). Maybe this demo should use multinomial emissions...
 ###############
 #  load data  #
 ###############
+with open("../mnist-64.txt", "r") as f:
+  l = ast.literal_eval(f.readline())
+  cluster = ast.literal_eval(f.readline())
 
-testcase = sys.argv[1]
-if testcase == "mr":
-    path = 'data/' + testcase + '/frames_features.txt'
-elif testcase == "mr2":
-    path = 'atari/exp1/frames_features.txt'
-else:
-    path = 'data/' + testcase + '/Goto-' + testcase + '-feature-state-ts.txt'
-
-# data = np.loadtxt(os.path.join(os.path.dirname(__file__),'MultiGoals-feature-state-ts.txt'))[:2500]
-data = np.loadtxt(os.path.join(os.path.dirname(__file__), path))
+data = np.array(ast.literal_eval(l))
 # data = np.loadtxt(os.path.join(os.path.dirname(__file__),'LightKey-feature-state-ts.txt'))[:2500]
 print(data)
 mean = data.mean(axis=1)
@@ -52,7 +47,7 @@ data = data - mean[:, np.newaxis]
 Nmax = 10
 
 # Set iteration count
-ITERATIONS = 1
+ITERATIONS = 10
 
 # and some hyperparameters
 obs_dim = data.shape[1]
@@ -148,7 +143,7 @@ for idx in progprint_xrange(ITERATIONS):
 
 posteriormodel.plot()
 plt.gcf().suptitle('HDP-HMM sampled model after {} iterations'.format(ITERATIONS))
-plt.savefig('plots/' + testcase + '/hdp-hmm.png')
+plt.savefig('plots/mnist/hdp-hmm.png')
 plt.close() 
 
 # Some more hypparams
@@ -173,7 +168,7 @@ for idx in progprint_xrange(ITERATIONS):
 
 posteriormodel.plot()
 plt.gcf().suptitle('Sticky HDP-HMM sampled model after {} iterations'.format(ITERATIONS))
-plt.savefig('plots/' + testcase + '/sticky-hdp-hmm.png')
+plt.savefig('plots/mnist/sticky-hdp-hmm.png')
 plt.close()
 
 '''
@@ -199,7 +194,7 @@ for idx in progprint_xrange(ITERATIONS):
 
 posteriormodel.plot()
 plt.gcf().suptitle('HDP-HSMM sampled model after {} iterations'.format(ITERATIONS))
-plt.savefig('plots/' + testcase + '/hdp-hsmm.png')
+plt.savefig('plots/mnist/hdp-hsmm.png')
 plt.close() 
 
 
