@@ -1,4 +1,5 @@
 import numpy as np
+import sys
 import matplotlib.pyplot as plt
 import matplotlib.mlab as mlab
 import matplotlib.animation as animation
@@ -78,21 +79,28 @@ def gibbs(x, c_guess, a_0, t, F):
   At each iteration, these cluster assignments are updated? How exactly is this done?  
   We look at an x_i, we sample it from some posterior distribution, but where do we get this from?  
   """
-  z = np.random.randint(1, c_guess, len(x)) # Random cluster assignments
+  old_z = np.random.randint(1, 2, len(x)) # Random cluster assignments
+  old_z = [1]*len(x)
+  new_z = []
   
   for iter_i in range(t):
-    u = pu(1, np.random.normal(0, 1, len(x)), len(x))
+    # u = pu(1, np.random.normal(0, 1, len(x)), len(x))
     for i, x_i in enumerate(x):
       rand = random.random()
       if rand < (a_0 / float(a_0 + i)):
         q_0 = 1.0/(2.0 * np.sqrt(np.pi)) * np.exp(-(np.square(x_i))/4.0)
         H = np.random.normal(np.array(x_i)/2.0, 0.5)
-        z[i] = q_0 * H # TODO: q_0 is very small, making z[i] = 0 most of the time
+        temp_z = round(a_0 * q_0 * H)
+        new_z = new_z + [temp_z]
       else:
         # F = lambda u : map(int, map(round, np.random.normal(u, 1)*6)) # 1D data
-        z[i] = random.choice(F(u)) #TODO: F should be distributed over possible cluster assignments for x_i, so nonnegative numbers only; maybe a random choice from z?
+        temp_z = F(random.choice(old_z[:i]))
+        new_z = new_z + [temp_z]
+        # z[i] = random.choice(F(u)) 
+    old_z = new_z[:]
+    new_z = []
 
-  return z
+  return old_z
  
 def dpmm(G_0, F, alpha, n):
   """
@@ -224,24 +232,26 @@ with open("1d-data.txt", "r") as f:
   l = ast.literal_eval(f.readline())
   true_clusters = ast.literal_eval(f.readline())
 x = l
-c_guess = 20
-a_0 = 10
-t = 10
-F = lambda u : map(int,map(round,np.random.normal(u, 1)*1)) 
+c_guess = 3
+a_0 = 2
+t = 100
+# F = lambda u : map(int,map(round,np.random.normal(u, 0.25))) 
+F = lambda u : int(round(np.random.normal(u, 1)))
 z = gibbs(x, c_guess, a_0, t, F)
 z_min = min(z)
-z = [i + abs(z_min) for i in z] # TODO: This is a temporary fix; the values for the cluster assignments are too high to plot (matplotlib doesn't provide that many colors)
+z = [i + abs(z_min) + 1 for i in z] # TODO: This is a temporary fix; the values for the cluster assignments are too high to plot (matplotlib doesn't provide that many colors)
 print z
 print true_clusters
 plt.scatter(x, [0]*len(x), c=z)
-#plt.show()
+plt.show()
 
 ## Testing the DPMM
 # Generating 1D data
-"""
-alpha = 10
+'''
+alpha = 2
 n = 100
-F = lambda u : np.random.normal(u, 0.5) # 1D data
+G_0 = np.random.uniform(0, 10, n)
+F = lambda u : np.random.normal(u, 0.25) # 1D data
 clusters = dpmm(G_0, F, alpha, n)
 
 # Associate points with colors
@@ -259,7 +269,7 @@ with open("1d-data.txt", "w") as f:
 
 plt.scatter(points, [0]*len(points), c=colors)
 plt.show()
-"""
+'''
 # Generating 2D data
 """
 alpha = 10
