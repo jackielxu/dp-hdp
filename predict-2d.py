@@ -12,9 +12,8 @@ from sklearn import mixture
 with open("2d-data.txt", "r") as f:
   l = ast.literal_eval(f.readline())
   clusters = ast.literal_eval(f.readline())
-print clusters
 X = np.array(l)
-dpgmm = mixture.DPGMM(n_components=12, alpha = 2, covariance_type='full')
+dpgmm = mixture.DPGMM(n_components=10, alpha = 2, covariance_type='full')
 dpgmm.fit(X)
 
 color_iter = itertools.cycle(['r', 'g', 'b', 'c', 'm'])
